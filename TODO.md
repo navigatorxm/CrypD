@@ -1,0 +1,7 @@
+- [ ] Fix syntax issue in contracts/src/interfaces/ITokenV2.sol SPDX header
+- [ ] Validate local compile for contracts/src/TokenV2.sol path-based source tree
+- [ ] Validate flattened compile remains successful
+- [ ] Validate proxy helper compile remains successful
+- [ ] Document exact Remix configuration for multi-file compile and fallback flattened flow
+- [ ] Perform thorough deployment checklist walkthrough (implementation + init encoder + proxy + post-deploy checks)
+- [ ] Deliver root-cause analysis + final resolution steps

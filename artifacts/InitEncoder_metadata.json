@@ -1,0 +1,91 @@
+{
+	"compiler": {
+		"version": "0.8.24+commit.e11b9ed9"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_v2Pool",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_v3Pool",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "name_",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "symbol_",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "meta_",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "maxSupply_",
+						"type": "uint256"
+					}
+				],
+				"name": "encodeInit",
+				"outputs": [
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "Helper contract to encode the initialize() calldata for TokenV2 Deploy this, call encodeInit() with your parameters, then use the returned bytes as the _data argument for ERC1967Proxy",
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"ProxyDeployer.sol": "InitEncoder"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 99999
+		},
+		"remappings": []
+	},
+	"sources": {
+		"ProxyDeployer.sol": {
+			"keccak256": "0x552835faa99f05c871d1f7f5041ce748169952388a0d84035acd84930f457b8d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://da6e7dc1a9f649b38e6c78da4800e3e6bcf064d05c5d7c41316854c02e85ab0d",
+				"dweb:/ipfs/QmUtFZhzPEyuxvBNAMg129aNyWV56AMs7iKFdrfWdoZ5GQ"
+			]
+		}
+	},
+	"version": 1
+}

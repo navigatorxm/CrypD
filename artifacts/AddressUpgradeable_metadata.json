@@ -1,0 +1,46 @@
+{
+	"compiler": {
+		"version": "0.8.24+commit.e11b9ed9"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [],
+		"devdoc": {
+			"details": "Collection of functions related to the address type",
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"TokenV2_Flattened.sol": "AddressUpgradeable"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 99999
+		},
+		"remappings": []
+	},
+	"sources": {
+		"TokenV2_Flattened.sol": {
+			"keccak256": "0x241d7f27b3d0279ca3636b8157816c3b1186378ffa6c9b63fa22d37cf124ff5c",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://dab750563ca421bc03bec48f190a9e053a8f0a7350bfe02144e37339c11d0e27",
+				"dweb:/ipfs/QmP3GpubcqxiXua72NtwNESQbyJtAedf1zDFV2XYuopqmo"
+			]
+		}
+	},
+	"version": 1
+}
