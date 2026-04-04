@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050510;
+  --foreground: #e2e8f0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f0f23; }
+::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+
+.glow-indigo { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+.glow-cyan { box-shadow: 0 0 20px rgba(6,182,212,0.3); }
+.text-glow { text-shadow: 0 0 20px rgba(99,102,241,0.5); }
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animated-gradient { background-size: 200% 200%; animation: gradient-shift 4s ease infinite; }
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+.float { animation: float 4s ease-in-out infinite; }
+
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 20s linear infinite; }
+
+.card-dark {
+  background: rgba(15,15,35,0.8);
+  border: 1px solid rgba(99,102,241,0.2);
+  backdrop-filter: blur(12px);
+}
+.card-dark:hover {
+  border-color: rgba(99,102,241,0.4);
+  box-shadow: 0 0 30px rgba(99,102,241,0.1);
+}

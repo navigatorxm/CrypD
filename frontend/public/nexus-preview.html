@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS-01 | Navigator OS</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050510;--bg2:#0a0a1a}
+body{background:var(--bg);color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0f0f23}::-webkit-scrollbar-thumb{background:#6366f1;border-radius:3px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.grid-bg{background-image:linear-gradient(rgba(99,102,241,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.05) 1px,transparent 1px);background-size:40px 40px}
+.layout{display:flex;height:100vh}
+.sidebar{width:256px;background:var(--bg2);border-right:1px solid rgba(99,102,241,.2);display:flex;flex-direction:column;transition:width .3s;flex-shrink:0}
+.sidebar.collapsed{width:64px}
+.sidebar-header{display:flex;align-items:center;gap:12px;height:64px;padding:0 16px;border-bottom:1px solid rgba(99,102,241,.2)}
+.sidebar-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-logo span{color:#fff;font-weight:700;font-size:14px}
+.sidebar-brand{display:flex;flex-direction:column}
+.sidebar-brand h2{color:#fff;font-size:13px;font-weight:600;letter-spacing:.05em}
+.sidebar-brand span{color:#818cf8;font-size:10px;letter-spacing:.15em}
+.sidebar-nav{flex:1;padding:16px 8px;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:#94a3b8;font-size:14px;transition:all .2s;cursor:pointer;border:1px solid transparent;position:relative;background:none;text-decoration:none}
+.nav-item:hover{color:#e2e8f0;background:rgba(255,255,255,.05)}
+.nav-item.active{background:rgba(99,102,241,.2);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+.nav-item svg{width:20px;height:20px;flex-shrink:0}
+.nav-item .badge{font-size:10px;padding:2px 6px;background:rgba(16,185,129,.2);color:#34d399;border-radius:9999px;border:1px solid rgba(16,185,129,.3);font-weight:500}
+.nav-item .tooltip{position:absolute;left:100%;margin-left:8px;padding:4px 8px;background:var(--bg2);border:1px solid rgba(99,102,241,.3);border-radius:4px;font-size:12px;color:#cbd5e1;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.nav-item:hover .tooltip{opacity:1}
+.sidebar-footer{padding:8px;border-top:1px solid rgba(99,102,241,.2)}
+.collapse-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px 12px;border-radius:8px;color:#94a3b8;background:none;border:none;cursor:pointer;font-size:12px;transition:all .2s}
+.collapse-btn:hover{color:#e2e8f0;background:rgba(255,255,255,.05)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.header{display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 24px;background:rgba(10,10,26,.8);border-bottom:1px solid rgba(99,102,241,.2);backdrop-filter:blur(8px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.header-left h1{font-size:18px;font-weight:600;color:#fff}
+.header-divider{width:1px;height:16px;background:rgba(99,102,241,.3)}
+.header-status{display:flex;align-items:center;gap:8px}
+.header-status .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+.header-status span{font-size:12px;color:#34d399;font-weight:500}
+.header-right{display:flex;align-items:center;gap:24px}
+.header-time{font-size:12px;color:#94a3b8;font-family:monospace}
+.header-avatar{display:flex;align-items:center;gap:12px;padding-left:12px;border-left:1px solid rgba(99,102,241,.3)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.avatar-info .name{font-size:13px;color:#fff;font-weight:500}
+.avatar-info .role{font-size:10px;color:#818cf8}
+.content{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-header h2{font-size:24px;font-weight:700;color:#fff}
+.page-header p{font-size:14px;color:#94a3b8;margin-top:4px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:rgba(15,15,35,.8);border:1px solid rgba(99,102,241,.2);border-radius:.75rem;padding:16px;transition:all .3s}
+.stat-card:hover{box-shadow:0 0 30px rgba(99,102,241,.1)}
+.stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stat-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.stat-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.stat-icon svg{width:24px;height:24px}
+.stat-value{font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
+.stat-change{font-size:12px}
+.se .stat-icon{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.3)}.se .stat-change{color:#34d399}
+.si .stat-icon{background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.3)}.si .stat-change{color:#818cf8}
+.sc .stat-icon{background:rgba(6,182,212,.1);color:#22d3ee;border:1px solid rgba(6,182,212,.3)}.sc .stat-change{color:#22d3ee}
+.sa .stat-icon{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}.sa .stat-change{color:#fbbf24}
+.monitor-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px}
+.monitor-card{background:rgba(15,15,35,.8);border:1px solid rgba(99,102,241,.2);border-radius:.75rem;padding:20px}
+.monitor-card h3{font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.monitor-live{display:flex;align-items:center;gap:8px}
+.monitor-live .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+.monitor-live span{font-size:12px;color:#94a3b8}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.metric{display:flex;flex-direction:column;gap:8px}
+.metric-header{display:flex;justify-content:space-between}
+.metric-header span:first-child{font-size:12px;color:#94a3b8}
+.metric-header span:last-child{font-size:13px;font-family:monospace;color:#fff}
+.progress-bar{height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s}
+.pi{background:#818cf8}.pc{background:#22d3ee}.pe{background:#34d399}.pa{background:#fbbf24}
+.sparkline{display:flex;align-items:end;gap:1px;height:32px}
+.sparkline div{flex:1;border-radius:1px;transition:height .3s;opacity:.6}
+.activity-list{display:flex;flex-direction:column;gap:16px}
+.activity-item{display:flex;gap:12px}
+.activity-dot-line{display:flex;flex-direction:column;align-items:center}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:6px}
+.activity-line{width:1px;height:40px;background:rgba(51,65,85,.5);margin-top:8px}
+.activity-content{flex:1;padding-bottom:16px}
+.activity-badges{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.activity-badge{font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid}
+.activity-time{font-size:10px;color:#64748b}
+.activity-msg{font-size:12px;color:#cbd5e1;line-height:1.5}
+.bi{background:rgba(59,130,246,.2);color:#60a5fa;border-color:rgba(59,130,246,.3)}
+.bs{background:rgba(16,185,129,.2);color:#34d399;border-color:rgba(16,185,129,.3)}
+.bw{background:rgba(245,158,11,.2);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+.be{background:rgba(239,68,68,.2);color:#f87171;border-color:rgba(239,68,68,.3)}
+.di{background:#60a5fa}.ds{background:#34d399}.dw{background:#fbbf24}.de{background:#f87171}
+.quick-actions{margin-top:24px}
+.quick-actions h3{font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.action-btn{display:flex;align-items:flex-start;gap:12px;padding:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.05);border-radius:8px;cursor:pointer;transition:all .2s;text-align:left}
+.action-btn:hover{border-color:rgba(99,102,241,.3);background:rgba(255,255,255,.08)}
+.action-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.action-label{font-size:13px;font-weight:500;color:#fff;margin-bottom:2px}
+.action-desc{font-size:11px;color:#94a3b8}
+.system-status{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:8px}
+.system-status .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+.system-status span{font-size:12px;color:#818cf8;font-weight:500}
+.gm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.gm-toggle{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid;transition:all .3s;background:none}
+.gm-toggle.active{background:rgba(16,185,129,.2);color:#34d399;border-color:rgba(16,185,129,.3)}
+.gm-toggle .dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
+.gm-toggle.active .dot{background:#34d399}
+.gm-toggle.inactive{background:rgba(239,68,68,.2);color:#f87171;border-color:rgba(239,68,68,.3)}
+.gm-toggle.inactive .dot{background:#f87171;animation:none}
+.cp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:24px}
+.cp-section{display:flex;flex-direction:column;gap:12px}
+.cp-section label{font-size:12px;color:#94a3b8}
+.cp-slider{width:100%;height:6px;-webkit-appearance:none;background:rgba(255,255,255,.1);border-radius:3px;outline:none;cursor:pointer}
+.cp-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#6366f1;cursor:pointer}
+.cp-range{display:flex;justify-content:space-between;font-size:10px;color:#64748b}
+.cp-value{font-size:12px;font-family:monospace;color:#818cf8}
+.cp-status{display:flex;flex-direction:column;gap:8px}
+.cp-status-row{display:flex;justify-content:space-between;font-size:12px}
+.cp-status-row span:first-child{color:#64748b}
+.sr{color:#34d399}.sm{color:#22d3ee}.su{color:#fbbf24}
+.gm-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.agent-list{display:flex;flex-direction:column;gap:8px}
+.agent-filters{display:flex;gap:8px;margin-bottom:16px}
+.agent-filter{padding:4px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-radius:4px;cursor:pointer;border:1px solid transparent;color:#64748b;transition:all .2s;background:none}
+.agent-filter.active{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.3)}
+.agent-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02)}
+.agent-item:hover{border-color:rgba(99,102,241,.3)}
+.agent-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.agent-info{flex:1;min-width:0}
+.agent-name{display:flex;align-items:center;gap:8px}
+.agent-name span{font-size:13px;font-weight:500;color:#fff}
+.agent-name .dot{width:6px;height:6px;border-radius:50%}
+.agent-role{font-size:11px;color:#94a3b8}
+.agent-stats{text-align:right;flex-shrink:0}
+.agent-stats .tasks{font-size:11px;color:#cbd5e1}
+.agent-stats .last{font-size:10px;color:#64748b}
+.terminal{background:rgba(15,15,35,.8);border:1px solid rgba(99,102,241,.2);border-radius:.75rem;padding:20px}
+.terminal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.terminal-header h3{font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.05em}
+.terminal-body{height:256px;overflow-y:auto;background:rgba(0,0,0,.4);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,.05)}
+.terminal-line{margin-bottom:8px}
+.ts{color:#475569}.tp{color:#818cf8}.tcmd{color:#22d3ee}.td{color:#64748b}.tc{color:#fff}.to{color:#34d399}.tys{color:#fbbf24}
+.terminal-input{display:flex;gap:8px;align-items:center}
+.terminal-input .dollar{color:#818cf8;font-family:monospace;font-size:13px}
+.terminal-input input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:#fff;font-family:monospace;outline:none}
+.terminal-input input:focus{border-color:rgba(99,102,241,.5)}
+.terminal-input input::placeholder{color:#475569}
+.terminal-input button{padding:8px 16px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.3);color:#818cf8;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.terminal-input button:hover{background:rgba(99,102,241,.3)}
+.model-list{display:flex;flex-direction:column;gap:8px}
+.model-item{padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02)}
+.model-item:hover{border-color:rgba(99,102,241,.2)}
+.model-item.selected{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.4)}
+.model-top{display:flex;align-items:center;justify-content:space-between}
+.model-name{display:flex;align-items:center;gap:8px}
+.model-name .dot{width:8px;height:8px;border-radius:50%}
+.model-name .dot.on{background:#818cf8}.model-name .dot.off{background:#475569}
+.model-name span{font-size:13px;font-weight:500;color:#fff}
+.model-rec{font-size:10px;padding:2px 6px;background:rgba(6,182,212,.2);color:#22d3ee;border-radius:4px;border:1px solid rgba(6,182,212,.3)}
+.model-meta{display:flex;gap:12px;font-size:10px;color:#64748b}
+.model-desc{font-size:11px;color:#94a3b8;margin-top:4px;margin-left:16px}
+.projects-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.projects-header h2{font-size:24px;font-weight:700;color:#fff}
+.projects-header p{font-size:14px;color:#94a3b8;margin-top:4px}
+.btn-new{display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.3);color:#818cf8;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-new:hover{background:rgba(99,102,241,.3)}
+.filters-bar{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.search-box{position:relative;flex:1;max-width:320px}
+.search-box input{width:100%;padding:8px 12px 8px 40px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;color:#fff;outline:none}
+.search-box input:focus{border-color:rgba(99,102,241,.5)}
+.search-box input::placeholder{color:#475569}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#64748b}
+.filter-btns{display:flex;gap:8px}
+.filter-btn{padding:6px 12px;font-size:12px;border-radius:8px;cursor:pointer;border:1px solid transparent;color:#64748b;transition:all .2s;background:none}
+.filter-btn.active{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.3)}
+.filter-btn:hover{color:#cbd5e1}
+.project-count{font-size:12px;color:#64748b;margin-left:auto}
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.project-card{background:rgba(15,15,35,.8);border:1px solid rgba(99,102,241,.2);border-radius:.75rem;padding:20px;transition:all .2s;cursor:pointer}
+.project-card:hover{border-color:rgba(99,102,241,.4)}
+.project-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.project-identity{display:flex;align-items:center;gap:12px}
+.project-avatar{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.project-name{font-size:14px;font-weight:600;color:#fff}
+.project-type{font-size:10px;color:#64748b}
+.status-badge{display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:9999px;font-size:10px;border:1px solid}
+.status-badge .dot{width:6px;height:6px;border-radius:50%}
+.sr2{background:rgba(16,185,129,.2);color:#34d399;border-color:rgba(16,185,129,.3)}.sr2 .dot{background:#34d399}
+.ss{background:rgba(100,116,139,.2);color:#94a3b8;border-color:rgba(100,116,139,.3)}.ss .dot{background:#94a3b8}
+.sb{background:rgba(245,158,11,.2);color:#fbbf24;border-color:rgba(245,158,11,.3)}.sb .dot{background:#fbbf24;animation:pulse 2s infinite}
+.sd{background:rgba(6,182,212,.2);color:#22d3ee;border-color:rgba(6,182,212,.3)}.sd .dot{background:#22d3ee}
+.project-desc{font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5}
+.project-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.project-metric{text-align:center}
+.project-metric .val{font-size:12px;font-family:monospace;color:#fff}
+.project-metric .lbl{font-size:10px;color:#64748b}
+.project-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+.project-tag{padding:2px 8px;font-size:10px;background:rgba(255,255,255,.05);color:#94a3b8;border-radius:9999px;border:1px solid rgba(255,255,255,.05)}
+.project-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
+.project-footer .updated{font-size:10px;color:#64748b}
+.project-footer .actions{display:flex;gap:4px}
+.project-footer .actions button{padding:6px;background:none;border:none;color:#94a3b8;cursor:pointer;border-radius:4px;transition:all .2s}
+.project-footer .actions button:hover{color:#fff;background:rgba(255,255,255,.05)}
+.settings-section{max-width:640px;display:flex;flex-direction:column;gap:24px}
+.settings-card{background:rgba(15,15,35,.8);border:1px solid rgba(99,102,241,.2);border-radius:.75rem;padding:20px}
+.settings-card h3{font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row .label{font-size:13px;color:#fff}
+.toggle-row .desc{font-size:11px;color:#94a3b8;margin-top:2px}
+.toggle{width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;transition:background .2s;border:none}
+.toggle.on{background:#6366f1}.toggle.off{background:#334155}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.input-group{margin-bottom:16px}
+.input-group label{display:block;font-size:11px;color:#94a3b8;margin-bottom:4px}
+.input-group input{width:100%;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:13px;color:#fff;font-family:monospace;outline:none}
+.input-group input:focus{border-color:rgba(99,102,241,.5)}
+.input-group input::placeholder{color:#475569}
+.input-row{display:flex;gap:8px;align-items:center}
+.input-row input{flex:1}
+.btn-sm{padding:8px 12px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid;transition:all .2s;background:none}
+.btn-sec{color:#94a3b8;border-color:rgba(255,255,255,.1)}.btn-sec:hover{color:#fff}
+.btn-pri{color:#818cf8;border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.2)}.btn-pri:hover{background:rgba(99,102,241,.3)}
+.danger-item{display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid rgba(239,68,68,.2);border-radius:8px;background:rgba(239,68,68,.05);margin-bottom:12px}
+.danger-item .label{font-size:13px;color:#fff}
+.danger-item .desc{font-size:11px;color:#94a3b8;margin-top:2px}
+.btn-danger{padding:8px 16px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-danger:hover{background:rgba(239,68,68,.3)}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<div class="sidebar-logo"><span>N</span></div>
+<div class="sidebar-brand" id="sidebarBrand"><h2>NEXUS-01</h2><span>NAVIGATOR OS</span></div>
+</div>
+<nav class="sidebar-nav">
+<a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+<span class="nav-label">Dashboard</span>
+<span class="tooltip">Dashboard</span>
+</a>
+<a class="nav-item" data-page="godmode" onclick="showPage('godmode')">
+<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+<span class="nav-label">GodMode AI</span>
+<span class="badge">LIVE</span>
+<span class="tooltip">GodMode AI</span>
+</a>
+<a class="nav-item" data-page="projects" onclick="showPage('projects')">
+<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+<span class="nav-label">Projects</span>
+<span class="tooltip">Projects</span>
+</a>
+<a class="nav-item" data-page="settings" onclick="showPage('settings')">
+<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+<span class="nav-label">Settings</span>
+<span class="tooltip">Settings</span>
+</a>
+</nav>
+<div class="sidebar-footer">
+<button class="collapse-btn" onclick="toggleSidebar()">
+<svg id="collapseIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+<span class="nav-label">Collapse</span>
+</button>
+</div>
+</aside>
+<div class="main">
+<header class="header">
+<div class="header-left">
+<h1>NEXUS-01 Control Center</h1>
+<div class="header-divider"></div>
+<div class="header-status"><div class="dot"></div><span>System Online</span></div>
+</div>
+<div class="header-right">
+<div class="header-time" id="clock">00:00:00</div>
+<div class="header-avatar">
+<div class="avatar">OP</div>
+<div class="avatar-info"><div class="name">Operator</div><div class="role">Admin</div></div>
+</div>
+</div>
+</header>
+<div class="content grid-bg">
+
+<div class="page active" id="page-dashboard">
+<div class="page-header">
+<div><h2>Dashboard Overview</h2><p>Welcome back, Operator. Here is your system status.</p></div>
+<div class="system-status"><div class="dot"></div><span>All Systems Operational</span></div>
+</div>
+<div class="stat-grid">
+<div class="stat-card se">
+<div class="stat-header"><span class="stat-label">GodMode Status</span><div class="stat-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div></div>
+<div class="stat-value">Active</div><div class="stat-change">+99.9% uptime</div>
+</div>
+<div class="stat-card si">
+<div class="stat-header"><span class="stat-label">Active Projects</span><div class="stat-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></div></div>
+<div class="stat-value">12</div><div class="stat-change">+3 this week</div>
+</div>
+<div class="stat-card sc">
+<div class="stat-header"><span class="stat-label">API Calls Today</span><div class="stat-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div></div>
+<div class="stat-value">24.8K</div><div class="stat-change">+12.5% vs yesterday</div>
+</div>
+<div class="stat-card sa">
+<div class="stat-header"><span class="stat-label">AI Tokens Used</span><div class="stat-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div></div>
+<div class="stat-value">1.2M</div><div class="stat-change">850K remaining</div>
+</div>
+</div>
+<div class="monitor-grid">
+<div class="monitor-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3>System Monitor</h3><div class="monitor-live"><div class="dot"></div><span>Live</span></div></div>
+<div class="metrics">
+<div class="metric"><div class="metric-header"><span>CPU Usage</span><span id="cpuVal">34%</span></div><div class="progress-bar"><div class="progress-fill pi" id="cpuBar" style="width:34%"></div></div><div class="sparkline" id="cpuSpark"></div></div>
+<div class="metric"><div class="metric-header"><span>Memory</span><span id="memVal">62%</span></div><div class="progress-bar"><div class="progress-fill pc" id="memBar" style="width:62%"></div></div><div class="sparkline" id="memSpark"></div></div>
+<div class="metric"><div class="metric-header"><span>GPU Load</span><span id="gpuVal">45%</span></div><div class="progress-bar"><div class="progress-fill pe" id="gpuBar" style="width:45%"></div></div><div class="sparkline" id="gpuSpark"></div></div>
+<div class="metric"><div class="metric-header"><span>Network I/O</span><span id="netVal">128 MB/s</span></div><div class="progress-bar"><div class="progress-fill pa" id="netBar" style="width:50%"></div></div><div class="sparkline" id="netSpark"></div></div>
+</div>
+</div>
+<div class="monitor-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3>Activity Feed</h3><span style="font-size:11px;color:#64748b">7 events</span></div>
+<div class="activity-list">
+<div class="activity-item"><div class="activity-dot-line"><div class="activity-dot ds"></div><div class="activity-line"></div></div><div class="activity-content"><div class="activity-badges"><span class="activity-badge bs">GodMode</span><span class="activity-time">2m ago</span></div><div class="activity-msg">GodMode AI model updated to v2.4.1</div></div></div>
+<div class="activity-item"><div class="activity-dot-line"><div class="activity-dot di"></div><div class="activity-line"></div></div><div class="activity-content"><div class="activity-badges"><span class="activity-badge bi">Projects</span><span class="activity-time">15m ago</span></div><div class="activity-msg">Project "TokenV2" deployment completed</div></div></div>
+<div class="activity-item"><div class="activity-dot-line"><div class="activity-dot dw"></div><div class="activity-line"></div></div><div class="activity-content"><div class="activity-badges"><span class="activity-badge bw">System</span><span class="activity-time">32m ago</span></div><div class="activity-msg">API rate limit at 78% capacity</div></div></div>
+<div class="activity-item"><div class="activity-dot-line"><div class="activity-dot ds"></div><div class="activity-line"></div></div><div class="activity-content"><div class="activity-badges"><span class="activity-badge bs">GodMode</span><span class="activity-time">1h ago</span></div><div class="activity-msg">New agent "ContractAuditor" initialized</div></div></div>
+<div class="activity-item"><div class="activity-dot-line"><div class="activity-dot di"></div></div><div class="activity-content"><div class="activity-badges"><span class="activity-badge bi">System</span><span class="activity-time">2h ago</span></div><div class="activity-msg">Backup completed for all projects</div></div></div>
+</div>
+</div>
+</div>
+<div class="quick-actions">
+<h3>Quick Actions</h3>
+<div class="actions-grid">
+<div class="action-btn"><div class="action-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5)"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div><div><div class="action-label">Deploy Contract</div><div class="action-desc">Deploy a new smart contract</div></div></div>
+<div class="action-btn"><div class="action-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2)"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></div><div><div class="action-label">New Project</div><div class="action-desc">Create a new project workspace</div></div></div>
+<div class="action-btn"><div class="action-icon" style="background:linear-gradient(135deg,#10b981,#059669)"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div><div><div class="action-label">AI Task</div><div class="action-desc">Assign a task to GodMode AI</div></div></div>
+<div class="action-btn"><div class="action-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div><div><div class="action-label">Audit Contracts</div><div class="action-desc">Run security audit on contracts</div></div></div>
+</div>
+</div>
+</div>
+
+<div class="page" id="page-godmode">
+<div class="gm-top">
+<div><h2 style="font-size:24px;font-weight:700;color:#fff">GodMode AI Co-pilot</h2><p style="font-size:14px;color:#94a3b8;margin-top:4px">Manage your AI agentic co-pilot and autonomous agents</p></div>
+<div class="gm-toggle active" id="gmToggle" onclick="toggleGodMode()"><div class="dot"></div><span id="gmToggleText">GodMode Active</span></div>
+</div>
+<div class="monitor-card" style="margin-bottom:24px">
+<h3 style="margin-bottom:16px">Control Panel</h3>
+<div class="cp-grid">
+<div class="cp-section"><label>Temperature</label><div style="display:flex;justify-content:space-between;align-items:center"><input type="range" class="cp-slider" min="0" max="2" step="0.01" value="0.7" oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2)"><span class="cp-value" id="tempVal">0.70</span></div><div class="cp-range"><span>Precise</span><span>Creative</span></div></div>
+<div class="cp-section"><label>Max Tokens</label><div style="display:flex;justify-content:space-between;align-items:center"><input type="range" class="cp-slider" min="256" max="8192" step="256" value="4096" oninput="document.getElementById('tokenVal').textContent=parseInt(this.value).toLocaleString()"><span class="cp-value" id="tokenVal">4,096</span></div><div class="cp-range"><span>256</span><span>8192</span></div></div>
+<div class="cp-section"><label>System Status</label><div class="cp-status"><div class="cp-status-row"><span>Engine</span><span class="sr" id="engineStatus">Running</span></div><div class="cp-status-row"><span>Memory</span><span class="sm">2.4 GB</span></div><div class="cp-status-row"><span>Uptime</span><span class="su">14h 32m</span></div></div></div>
+</div>
+</div>
+<div class="gm-grid">
+<div class="monitor-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3>Active Agents</h3><div class="agent-filters"><button class="agent-filter active" onclick="filterAgents('all',this)">all</button><button class="agent-filter" onclick="filterAgents('active',this)">active</button><button class="agent-filter" onclick="filterAgents('idle',this)">idle</button><button class="agent-filter" onclick="filterAgents('error',this)">error</button></div></div>
+<div class="agent-list" id="agentList">
+<div class="agent-item" data-status="active"><div class="agent-avatar">CA</div><div class="agent-info"><div class="agent-name"><span>ContractAuditor</span><div class="dot" style="background:#34d399"></div></div><div class="agent-role">Smart Contract Security</div></div><div class="agent-stats"><div class="tasks">142 tasks</div><div class="last">Just now</div></div></div>
+<div class="agent-item" data-status="active"><div class="agent-avatar">CA</div><div class="agent-info"><div class="agent-name"><span>CodeArchitect</span><div class="dot" style="background:#34d399"></div></div><div class="agent-role">System Design & Architecture</div></div><div class="agent-stats"><div class="tasks">89 tasks</div><div class="last">2m ago</div></div></div>
+<div class="agent-item" data-status="idle"><div class="agent-avatar">DB</div><div class="agent-info"><div class="agent-name"><span>DeployBot</span><div class="dot" style="background:#fbbf24"></div></div><div class="agent-role">CI/CD & Deployment</div></div><div class="agent-stats"><div class="tasks">256 tasks</div><div class="last">15m ago</div></div></div>
+<div class="agent-item" data-status="active"><div class="agent-avatar">DA</div><div class="agent-info"><div class="agent-name"><span>DataAnalyst</span><div class="dot" style="background:#34d399"></div></div><div class="agent-role">Analytics & Reporting</div></div><div class="agent-stats"><div class="tasks">67 tasks</div><div class="last">5m ago</div></div></div>
+<div class="agent-item" data-status="error"><div class="agent-avatar">TM</div><div class="agent-info"><div class="agent-name"><span>TokenMigrator</span><div class="dot" style="background:#f87171"></div></div><div class="agent-role">ERC-20 Migration Specialist</div></div><div class="agent-stats"><div class="tasks">34 tasks</div><div class="last">1h ago</div></div></div>
+<div class="agent-item" data-status="idle"><div class="agent-avatar">DW</div><div class="agent-info"><div class="agent-name"><span>DocWriter</span><div class="dot" style="background:#fbbf24"></div></div><div class="agent-role">Documentation Generation</div></div><div class="agent-stats"><div class="tasks">198 tasks</div><div class="last">30m ago</div></div></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<div class="monitor-card">
+<h3 style="margin-bottom:16px">Model Selection</h3>
+<div class="model-list">
+<div class="model-item selected" onclick="selectModel(this)"><div class="model-top"><div class="model-name"><div class="dot on"></div><span>Nexus Omni v4.0</span><span class="model-rec">Recommended</span></div><div class="model-meta"><span>Fast</span><span>128K</span></div></div><div class="model-desc">Most capable model for complex tasks</div></div>
+<div class="model-item" onclick="selectModel(this)"><div class="model-top"><div class="model-name"><div class="dot off"></div><span>Nexus Fast v3.5</span></div><div class="model-meta"><span>Fastest</span><span>64K</span></div></div><div class="model-desc">Optimized for speed and efficiency</div></div>
+<div class="model-item" onclick="selectModel(this)"><div class="model-top"><div class="model-name"><div class="dot off"></div><span>Nexus Code v2.0</span></div><div class="model-meta"><span>Fast</span><span>32K</span></div></div><div class="model-desc">Specialized for code generation</div></div>
+<div class="model-item" onclick="selectModel(this)"><div class="model-top"><div class="model-name"><div class="dot off"></div><span>Nexus Lite v1.0</span></div><div class="model-meta"><span>Fastest</span><span>16K</span></div></div><div class="model-desc">Lightweight model for simple tasks</div></div>
+</div>
+</div>
+<div class="terminal">
+<div class="terminal-header"><h3>GodMode Terminal</h3><div class="monitor-live"><div class="dot"></div><span>Connected</span></div></div>
+<div class="terminal-body" id="terminalBody">
+<div class="terminal-line"><span class="ts">[00:00:00]</span> <span class="tys">NEXUS-01 GodMode Terminal v2.4.1</span></div>
+<div class="terminal-line"><span class="ts">[00:00:01]</span> <span class="tys">Connected to GodMode AI Co-pilot engine</span></div>
+<div class="terminal-line"><span class="ts">[00:00:02]</span> <span class="tys">Type a command or ask me anything...</span></div>
+</div>
+<div class="terminal-input">
+<span class="dollar">$</span>
+<input type="text" id="terminalInput" placeholder="Enter command or ask anything..." onkeydown="if(event.key==='Enter')sendCommand()">
+<button onclick="sendCommand()">Send</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="page" id="page-projects">
+<div class="projects-header">
+<div><h2>Projects</h2><p>Manage and monitor all running projects</p></div>
+<button class="btn-new"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>New Project</button>
+</div>
+<div class="filters-bar">
+<div class="search-box"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" placeholder="Search projects..." id="projectSearch" oninput="filterProjects()"></div>
+<div class="filter-btns"><button class="filter-btn active" onclick="setProjectFilter('all',this)">All</button><button class="filter-btn" onclick="setProjectFilter('running',this)">Running</button><button class="filter-btn" onclick="setProjectFilter('stopped',this)">Stopped</button><button class="filter-btn" onclick="setProjectFilter('building',this)">Building</button><button class="filter-btn" onclick="setProjectFilter('deployed',this)">Deployed</button></div>
+<span class="project-count" id="projectCount">6 projects</span>
+</div>
+<div class="projects-grid" id="projectsGrid">
+<div class="project-card" data-status="running" data-name="TokenV2"><div class="project-top"><div class="project-identity"><div class="project-avatar">TV</div><div><div class="project-name">TokenV2</div><div class="project-type">Smart Contract</div></div></div><div class="status-badge sr2"><div class="dot"></div>running</div></div><div class="project-desc">ERC-20 token upgrade with governance features</div><div class="project-metrics"><div class="project-metric"><div class="val">12%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">256MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:8545</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">Solidity</span><span class="project-tag">ERC-20</span><span class="project-tag">DeFi</span></div><div class="project-footer"><span class="updated">Updated 2m ago</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+<div class="project-card" data-status="deployed" data-name="ProxyDeployer"><div class="project-top"><div class="project-identity"><div class="project-avatar">PD</div><div><div class="project-name">ProxyDeployer</div><div class="project-type">Infrastructure</div></div></div><div class="status-badge sd"><div class="dot"></div>deployed</div></div><div class="project-desc">Automated proxy deployment system</div><div class="project-metrics"><div class="project-metric"><div class="val">5%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">128MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:3000</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">Proxy</span><span class="project-tag">Deployment</span></div><div class="project-footer"><span class="updated">Updated 15m ago</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+<div class="project-card" data-status="running" data-name="NEXUS-01"><div class="project-top"><div class="project-identity"><div class="project-avatar">NX</div><div><div class="project-name">NEXUS-01</div><div class="project-type">Full Stack</div></div></div><div class="status-badge sr2"><div class="dot"></div>running</div></div><div class="project-desc">Navigator OS - AI Agentic Co-pilot platform</div><div class="project-metrics"><div class="project-metric"><div class="val">34%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">512MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:3001</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">Next.js</span><span class="project-tag">AI</span><span class="project-tag">Dashboard</span></div><div class="project-footer"><span class="updated">Updated Just now</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+<div class="project-card" data-status="building" data-name="ContractAuditor"><div class="project-top"><div class="project-identity"><div class="project-avatar">CA</div><div><div class="project-name">ContractAuditor</div><div class="project-type">AI Agent</div></div></div><div class="status-badge sb"><div class="dot"></div>building</div></div><div class="project-desc">Automated smart contract security auditing</div><div class="project-metrics"><div class="project-metric"><div class="val">67%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">1024MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:8080</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">Security</span><span class="project-tag">AI</span><span class="project-tag">Audit</span></div><div class="project-footer"><span class="updated">Updated 5m ago</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+<div class="project-card" data-status="running" data-name="DataPipeline"><div class="project-top"><div class="project-identity"><div class="project-avatar">DP</div><div><div class="project-name">DataPipeline</div><div class="project-type">Backend</div></div></div><div class="status-badge sr2"><div class="dot"></div>running</div></div><div class="project-desc">Real-time blockchain data processing pipeline</div><div class="project-metrics"><div class="project-metric"><div class="val">23%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">384MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:5432</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">ETL</span><span class="project-tag">Blockchain</span></div><div class="project-footer"><span class="updated">Updated 1h ago</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+<div class="project-card" data-status="stopped" data-name="FrontendApp"><div class="project-top"><div class="project-identity"><div class="project-avatar">FA</div><div><div class="project-name">FrontendApp</div><div class="project-type">Frontend</div></div></div><div class="status-badge ss"><div class="dot"></div>stopped</div></div><div class="project-desc">U-OS Token Platform frontend</div><div class="project-metrics"><div class="project-metric"><div class="val">0%</div><div class="lbl">CPU</div></div><div class="project-metric"><div class="val">0MB</div><div class="lbl">RAM</div></div><div class="project-metric"><div class="val">:3002</div><div class="lbl">PORT</div></div></div><div class="project-tags"><span class="project-tag">React</span><span class="project-tag">UI</span></div><div class="project-footer"><span class="updated">Updated 2d ago</span><div class="actions"><button title="Open"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></button><button title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button></div></div></div>
+</div>
+</div>
+
+<div class="page" id="page-settings">
+<div class="page-header"><div><h2>Settings</h2><p>Configure your NEXUS-01 Navigator OS preferences</p></div></div>
+<div class="settings-section">
+<div class="settings-card">
+<h3>General</h3>
+<div class="toggle-row"><div><div class="label">Dark Mode</div><div class="desc">Use dark theme across the dashboard</div></div><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button></div>
+<div class="toggle-row"><div><div class="label">Notifications</div><div class="desc">Receive alerts for system events and agent updates</div></div><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button></div>
+<div class="toggle-row"><div><div class="label">Auto Deploy</div><div class="desc">Automatically deploy contracts after successful validation</div></div><button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button></div>
+</div>
+<div class="settings-card">
+<h3>API Configuration</h3>
+<div class="input-group"><label>API Key</label><div class="input-row"><input type="password" value="nexus-sk-****-****-****-a3f9" id="apiKeyInput"><button class="btn-sm btn-sec" onclick="toggleApiKey()">Show</button><button class="btn-sm btn-pri">Regenerate</button></div></div>
+<div class="input-group"><label>Webhook URL</label><input type="text" placeholder="https://your-webhook-url.com/nexus"></div>
+</div>
+<div class="settings-card">
+<h3>Danger Zone</h3>
+<div class="danger-item"><div><div class="label">Reset All Settings</div><div class="desc">Restore all settings to their default values</div></div><button class="btn-danger">Reset</button></div>
+<div class="danger-item"><div><div class="label">Delete All Projects</div><div class="desc">Permanently remove all project data</div></div><button class="btn-danger">Delete All</button></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+<script>
+let collapsed=false;
+function showPage(p){
+document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+document.getElementById('page-'+p).classList.add('active');
+document.querySelector('[data-page="'+p+'"]').classList.add('active');
+}
+function toggleSidebar(){
+collapsed=!collapsed;
+document.getElementById('sidebar').classList.toggle('collapsed');
+document.getElementById('sidebarBrand').style.display=collapsed?'none':'flex';
+document.querySelectorAll('.nav-label').forEach(el=>el.style.display=collapsed?'none':'');
+document.querySelectorAll('.nav-item .badge').forEach(el=>el.style.display=collapsed?'none':'');
+document.getElementById('collapseIcon').innerHTML=collapsed?'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/>':'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/>';
+}
+function toggleGodMode(){
+const t=document.getElementById('gmToggle');
+const txt=document.getElementById('gmToggleText');
+const eng=document.getElementById('engineStatus');
+if(t.classList.contains('active')){
+t.classList.remove('active');t.classList.add('inactive');
+txt.textContent='GodMode Inactive';eng.textContent='Stopped';eng.className='';eng.style.color='#f87171';
+}else{
+t.classList.remove('inactive');t.classList.add('active');
+txt.textContent='GodMode Active';eng.textContent='Running';eng.className='sr';
+}
+}
+function filterAgents(f,btn){
+document.querySelectorAll('.agent-filter').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+document.querySelectorAll('.agent-item').forEach(item=>{
+if(f==='all'||item.dataset.status===f){item.style.display='flex'}else{item.style.display='none'}
+});
+}
+function selectModel(el){
+document.querySelectorAll('.model-item').forEach(m=>{m.classList.remove('selected');m.querySelector('.dot').className='dot off'});
+el.classList.add('selected');el.querySelector('.dot').className='dot on';
+}
+function sendCommand(){
+const input=document.getElementById('terminalInput');
+const body=document.getElementById('terminalBody');
+const cmd=input.value.trim();
+if(!cmd)return;
+const ts=new Date().toLocaleTimeString('en-US',{hour12:false});
+body.innerHTML+='<div class="terminal-line"><span class="ts">['+ts+']</span> <span class="tp">operator@nexus</span><span class="td">:</span><span class="tcmd">~</span><span class="td">$ </span><span class="tc">'+cmd+'</span></div>';
+input.value='';
+setTimeout(()=>{
+const responses={help:'Available commands: status, deploy, audit, agents, clear, help',status:'GodMode Status: ACTIVE | Model: nexus-omni-4.0 | Uptime: 14h 32m | Memory: 2.4GB',deploy:'Initiating deployment sequence... All 3 contracts validated. Deploying to mainnet...',audit:'Running security audit on TokenV2... 0 critical issues found. 2 minor warnings.',agents:'6 agents registered: ContractAuditor (active), CodeArchitect (active), DeployBot (idle), DataAnalyst (active), TokenMigrator (error), DocWriter (idle)'};
+const r=responses[cmd.toLowerCase()]||'Processing "'+cmd+'"... Analysis complete. Ready for next command.';
+const ts2=new Date().toLocaleTimeString('en-US',{hour12:false});
+body.innerHTML+='<div class="terminal-line"><span class="ts">['+ts2+']</span> <span class="to">'+r+'</span></div>';
+body.scrollTop=body.scrollHeight;
+},800);
+}
+function setProjectFilter(f,btn){
+document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+let count=0;
+document.querySelectorAll('.project-card').forEach(card=>{
+if(f==='all'||card.dataset.status===f){card.style.display='';count++}else{card.style.display='none'}
+});
+document.getElementById('projectCount').textContent=count+' project'+(count!==1?'s':'');
+}
+function filterProjects(){
+const q=document.getElementById('projectSearch').value.toLowerCase();
+document.querySelectorAll('.project-card').forEach(card=>{
+const name=card.dataset.name.toLowerCase();
+const desc=card.querySelector('.project-desc').textContent.toLowerCase();
+card.style.display=(name.includes(q)||desc.includes(q))?'':'none';
+});
+}
+function toggleApiKey(){
+const i=document.getElementById('apiKeyInput');
+i.type=i.type==='password'?'text':'password';
+}
+function updateClock(){
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
+}
+setInterval(updateClock,1000);updateClock();
+function genData(base,variance,len){return Array.from({length:len},()=>Math.max(5,Math.min(100,base+Math.random()*variance-variance/2)))}
+function renderSparkline(id,data,color){
+const el=document.getElementById(id);if(!el)return;
+el.innerHTML='';
+data.forEach(v=>{const d=document.createElement('div');d.style.height=v+'%';d.style.background=color;el.appendChild(d)});
+}
+let cpuD=genData(34,20,20),memD=genData(62,15,20),gpuD=genData(45,25,20),netD=genData(50,30,20);
+function updateMetrics(){
+cpuD=[...cpuD.slice(1),Math.max(5,Math.min(100,34+Math.random()*20-10))];
+memD=[...memD.slice(1),Math.max(5,Math.min(100,62+Math.random()*15-7.5))];
+gpuD=[...gpuD.slice(1),Math.max(5,Math.min(100,45+Math.random()*25-12.5))];
+netD=[...netD.slice(1),Math.max(5,Math.min(100,50+Math.random()*30-15))];
+const cv=Math.round(cpuD[cpuD.length-1]),mv=Math.round(memD[memD.length-1]),gv=Math.round(gpuD[gpuD.length-1]),nv=Math.round(netD[netD.length-1]);
+document.getElementById('cpuVal').textContent=cv+'%';document.getElementById('cpuBar').style.width=cv+'%';
+document.getElementById('memVal').textContent=mv+'%';document.getElementById('memBar').style.width=mv+'%';
+document.getElementById('gpuVal').textContent=gv+'%';document.getElementById('gpuBar').style.width=gv+'%';
+document.getElementById('netVal').textContent=nv+' MB/s';document.getElementById('netBar').style.width=nv+'%';
+renderSparkline('cpuSpark',cpuD,'#818cf8');renderSparkline('memSpark',memD,'#22d3ee');
+renderSparkline('gpuSpark',gpuD,'#34d399');renderSparkline('netSpark',netD,'#fbbf24');
+}
+renderSparkline('cpuSpark',cpuD,'#818cf8');renderSparkline('memSpark',memD,'#22d3ee');
+renderSparkline('gpuSpark',gpuD,'#34d399');renderSparkline('netSpark',netD,'#fbbf24');
+setInterval(updateMetrics,2000);
+</script>
+</body>
+</html>

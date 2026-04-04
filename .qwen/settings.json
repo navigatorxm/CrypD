@@ -6,7 +6,8 @@
       "Bash(source *)",
       "Bash(free-code)",
       "Bash(wt)",
-      "Bash(wsl *)"
+      "Bash(wsl *)",
+      "Bash(git commit *)"
     ]
   },
   "$version": 3
