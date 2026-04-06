@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_ALCHEMY_API_KEY": "@alchemy_api_key",
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "@walletconnect_id"
+  }
+}
