@@ -1,4 +1,4 @@
-- [ ] Fix syntax issue in contracts/src/interfaces/ITokenV2.sol SPDX header
+- [x] Fix syntax issue in contracts/src/interfaces/ITokenV2.sol SPDX header (RESOLVED: Header is correct)
 - [ ] Validate local compile for contracts/src/TokenV2.sol path-based source tree
 - [ ] Validate flattened compile remains successful
 - [ ] Validate proxy helper compile remains successful
